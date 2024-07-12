@@ -8,7 +8,7 @@ load_dotenv()
 bot = ezcord.Bot(
     intents=discord.Intents.all(),
     language="de",
-    debug_guilds= [1092275892090327113]
+    debug_guilds=[1092275892090327113]
 )
 
 
