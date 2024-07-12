@@ -1,16 +1,15 @@
-import os
-
 import discord
 import ezcord
-from discord.commands import slash_command
-from discord import  file
+from discord.commands import slash_command, Option
+from discord.utils import basic_autocomplete
 
+amount = [10, 25, 50,100]
 
 
 class Clear(ezcord.Cog, emoji="🗑️"):
 
     @slash_command(description="Clear Messages")
-    async def clear(self, ctx: discord.ApplicationContext, amount: int):
+    async def clear(self, ctx: discord.ApplicationContext, amount: Option(int, autocomplete=basic_autocomplete(amount))):
         await ctx.channel.purge(limit=amount)
 
         image_path = 'data/Images/trash.gif'

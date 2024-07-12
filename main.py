@@ -2,7 +2,7 @@ import discord
 import ezcord
 import os
 from dotenv import load_dotenv
-from discord.commands import SlashCommandGroup
+
 load_dotenv()
 
 bot = ezcord.Bot(

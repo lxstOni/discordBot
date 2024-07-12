@@ -82,6 +82,9 @@ class Marriage(ezcord.Cog, emoji="💍"):
             marriage_embed.set_footer(text=f"Embed created from {ctx.bot.user.name}")
             await ctx.send(embed=marriage_embed)
 
+
 setup_db()
+
+
 def setup(bot):
     bot.add_cog(Marriage(bot))

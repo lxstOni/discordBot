@@ -3,17 +3,20 @@ import ezcord
 from discord.ext import commands
 
 
-
 class JoinToCreate(ezcord.Cog, emoji="🔛"):
+
+    temporary_channels = []
+    temporary_categories = []
+
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState)    :
-        possible_channel_name = f"{member.nick}'s area"
+        possible_channel_name = f"{member.display_name}'s area"
         if after.channel:
             if after.channel.name == "temp":
                 temp_channel = await after.channel.clone(name=possible_channel_name)
                 await member.move_to(temp_channel)
                 self.temporary_channels.append(temp_channel.id)
-            if after.channel.name == 'teams':
+            if after.channel.name == 'area':
                 temporary_category = await after.channel.guild.create_category(name=possible_channel_name)
                 await temporary_category.create_text_channel(name="text")
                 temp_channel = await temporary_category.create_voice_channel(name="voice")
