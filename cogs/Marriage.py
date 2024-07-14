@@ -6,6 +6,7 @@ import asyncio
 import datetime
 import os
 
+
 def setup_db():
     db_path = 'data/marriages.db'
     db_folder = os.path.dirname(db_path)

@@ -21,6 +21,7 @@ def setup_db():
     conn.commit()
     conn.close()
 
+
 class CreateTicketButton(Button):
     def __init__(self, bot):
         super().__init__(style=discord.ButtonStyle.green, label="Create Ticket", emoji="🎫")
