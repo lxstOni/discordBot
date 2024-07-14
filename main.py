@@ -19,6 +19,3 @@ bot = ezcord.Bot(
 if __name__ == "__main__":
     bot.load_cogs("cogs")
     bot.run(os.getenv("TOKEN"))
-    @bot.event
-    async def on_ready():
-        discord.Bot.add_view(CreateTicketButton())
