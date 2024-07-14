@@ -1,10 +1,9 @@
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
-import asyncio
 import sqlite3
 import os
-
+import asyncio
 
 def setup_db():
     db_path = 'data/tickets.db'
@@ -22,6 +21,35 @@ def setup_db():
     conn.commit()
     conn.close()
 
+class CreateTicketButton(Button):
+    def __init__(self, bot):
+        super().__init__(style=discord.ButtonStyle.green, label="Create Ticket", emoji="🎫")
+        self.bot = bot
+
+    async def callback(self, interaction: discord.Interaction):
+        ticket_system = self.bot.get_cog('TicketSystem')
+        await ticket_system.create_ticket(interaction)
+
+class CloseTicketButton(Button):
+    def __init__(self, bot, guild_id, member_id):
+        super().__init__(style=discord.ButtonStyle.red, label="Close Ticket", emoji="🔒")
+        self.bot = bot
+        self.guild_id = guild_id
+        self.member_id = member_id
+
+    async def callback(self, interaction: discord.Interaction):
+        ticket_system = self.bot.get_cog('TicketSystem')
+        await ticket_system.close_ticket(interaction, self.guild_id, self.member_id)
+
+class TicketView(View):
+    def __init__(self, bot):
+        super().__init__(timeout=None)
+        self.add_item(CreateTicketButton(bot))
+
+class CloseTicketView(View):
+    def __init__(self, bot, guild_id, member_id):
+        super().__init__(timeout=None)
+        self.add_item(CloseTicketButton(bot, guild_id, member_id))
 
 class TicketSystem(commands.Cog):
     def __init__(self, bot):
@@ -65,16 +93,7 @@ class TicketSystem(commands.Cog):
             description="Click the button below to create a support ticket.",
             color=discord.Color.blue()
         )
-
-        view = View(timeout=None)
-        button = Button(style=discord.ButtonStyle.green, label="Create Ticket", emoji="🎫")
-
-        async def button_callback(interaction):
-            await self.create_ticket(interaction)
-
-        button.callback = button_callback
-        view.add_item(button)
-
+        view = TicketView(self.bot)
         await ctx.respond(embed=embed, view=view)
 
     async def create_ticket(self, interaction: discord.Interaction):
@@ -107,15 +126,7 @@ class TicketSystem(commands.Cog):
             description=f"Welcome {member.mention}! Please describe your issue. A team member will assist you shortly.",
             color=discord.Color.green()
         )
-        close_button = Button(style=discord.ButtonStyle.red, label="Close Ticket", emoji="🔒")
-
-        async def close_callback(inter):
-            await self.close_ticket(inter, guild.id, member.id)
-
-        close_button.callback = close_callback
-        view = View(timeout=None,)
-        view.add_item(close_button)
-
+        view = CloseTicketView(self.bot, guild.id, member.id)
         await channel.send(embed=embed, view=view)
         await interaction.response.send_message(f"Your ticket has been created: {channel.mention}", ephemeral=True)
 
@@ -128,8 +139,8 @@ class TicketSystem(commands.Cog):
         channel = interaction.guild.get_channel(channel_id)
 
         if channel:
-            await channel.send("This ticket will be closed in 5 seconds.")
-            await asyncio.sleep(5)
+            await channel.send("This ticket will be closed in 2 seconds.")
+            await asyncio.sleep(2)
             await channel.delete()
 
         self.remove_ticket(guild_id, member_id)
@@ -137,9 +148,10 @@ class TicketSystem(commands.Cog):
         user = await self.bot.fetch_user(member_id)
         await user.send(f"Your ticket on the server {interaction.guild.name} has been closed.")
 
-
+# Set up the database
 setup_db()
-
 
 def setup(bot):
     bot.add_cog(TicketSystem(bot))
+
+
