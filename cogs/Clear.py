@@ -12,14 +12,7 @@ class Clear(ezcord.Cog, emoji="🗑️"):
     async def clear(self, ctx: discord.ApplicationContext, amount: Option(int, autocomplete=basic_autocomplete(amount))):
         await ctx.channel.purge(limit=amount)
 
-        image_path = 'data/Images/trash.gif'
-
-        # Open the image file in binary mode
-        with open(image_path, 'rb') as f:
-            picture = discord.File(f)
-
-        await ctx.respond("this message get cleared in 10 seconds ...",file=picture,ephemeral=True, delete_after=10)
-        await ctx.followup.send(f"cleared {amount} messages", delete_after=10, ephemeral=True)
+        await ctx.respond(f"cleared {amount} messages", delete_after=10, ephemeral=True)
 
 def setup(bot):
     bot.add_cog(Clear(bot))
