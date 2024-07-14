@@ -4,6 +4,7 @@ from discord.ui import Button, View
 import sqlite3
 import os
 import asyncio
+import ezcord
 
 def setup_db():
     db_path = 'data/tickets.db'
@@ -52,10 +53,11 @@ class CloseTicketView(View):
         super().__init__(timeout=None)
         self.add_item(CloseTicketButton(bot, guild_id, member_id))
 
-class TicketSystem(commands.Cog):
+class TicketSystem(ezcord.Cog, emoji="🎫"):
     def __init__(self, bot):
         self.bot = bot
         self.db_path = 'data/tickets.db'
+
 
     def add_ticket(self, guild_id, user_id, channel_id):
         conn = sqlite3.connect(self.db_path)

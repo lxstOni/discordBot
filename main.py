@@ -2,18 +2,17 @@ import discord
 import ezcord
 import os
 from dotenv import load_dotenv
-from cogs.Ticket import CreateTicketButton
 
 load_dotenv()
+status = discord.Status.dnd
+
 
 bot = ezcord.Bot(
     intents=discord.Intents.all(),
     language="de",
-    debug_guilds=[1092275892090327113]
+    debug_guilds=[1092275892090327113],
+    status=status
 )
-
-
-
 
 
 if __name__ == "__main__":

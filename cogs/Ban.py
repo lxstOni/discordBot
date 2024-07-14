@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.commands import slash_command
 import ezcord
 
+
 class Ban(ezcord.Cog,emoji="🚫"):
     @slash_command(description="Ban a user")
     @commands.has_permissions(ban_members=True)

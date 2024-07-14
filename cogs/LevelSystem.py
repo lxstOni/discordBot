@@ -6,7 +6,7 @@ import aiosqlite
 import random
 import os
 
-class LevelSystem(ezcord.Cog):
+class LevelSystem(ezcord.Cog, emoji="📶"):
     def __init__(self, bot):
         self.bot = bot
         self.DB = self.setup_db()
