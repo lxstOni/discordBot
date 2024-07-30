@@ -4,7 +4,7 @@ from discord.commands import slash_command, Option
 from discord.ext import commands
 
 
-class Activity(ezcord.Cog, emoji="🧘"):
+class OwnerCmds(ezcord.Cog, emoji="🔑", description="Bot Owner only Commands", hidden=True):
 
     @slash_command(description="Owner Only Command")
     @commands.is_owner()
@@ -26,4 +26,4 @@ class Activity(ezcord.Cog, emoji="🧘"):
 
 
 def setup(bot):
-    bot.add_cog(Activity(bot))
+    bot.add_cog(OwnerCmds(bot))
