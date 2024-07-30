@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 load_dotenv()
 status = discord.Status.dnd
 
-
-
 bot = ezcord.Bot(
     intents=discord.Intents.all(),
     language="de",

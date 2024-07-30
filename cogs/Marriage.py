@@ -24,6 +24,8 @@ def setup_db():
     ''')
     conn.commit()
     conn.close()
+
+
 class Marriage(ezcord.Cog, emoji="💍"):
     def set_marriage(self, user_id, partner_id):
         conn = sqlite3.connect('marriages.db')
@@ -69,12 +71,10 @@ class Marriage(ezcord.Cog, emoji="💍"):
             return m.author == member and m.content == "/accept_propose"
 
         try:
-            # Auf die Akzeptanz der Heiratsanfrage warten
             await ctx.bot.wait_for('message', check=check, timeout=60.0)
         except asyncio.TimeoutError:
             await ctx.send("Proposal timed out!")
         else:
-            # Heirat in die Datenbank einfügen
             self.set_marriage(ctx.author.id, member.id)
             self.set_marriage(member.id, ctx.author.id)
             marriage_embed = discord.Embed(title="Marriage Confirmed",
