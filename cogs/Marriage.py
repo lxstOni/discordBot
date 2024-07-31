@@ -27,6 +27,7 @@ def setup_db():
 
 
 class Marriage(ezcord.Cog, emoji="💍"):
+
     def set_marriage(self, user_id, partner_id):
         conn = sqlite3.connect('marriages.db')
         c = conn.cursor()

@@ -60,6 +60,5 @@ class Moderation(ezcord.Cog,emoji="🕵️‍♂️", description="Moderation Co
         await ctx.response.send_message(embed=unban_embed, ephemeral=True)
 
 
-
 def setup(bot: discord.Bot):
     bot.add_cog(Moderation(bot))

@@ -14,14 +14,14 @@ class OwnerCmds(ezcord.Cog, emoji="🔑", description="Bot Owner only Commands",
             name: Option(str)
     ):
         if typ == "game":
-            act = discord.Game(name=name)
+            activity = discord.Game(name=name)
         else:
-            act = discord.Streaming(
+            activity = discord.Streaming(
                 name=name,
-                url="https://www.twitch.tv/keks"
+                url="https://discord.com/invite/jBQXd22yfe"
             )
 
-        await self.bot.change_presence(activity=act, status=discord.Status.dnd)
+        await self.bot.change_presence(activity=activity, status=discord.Status.dnd)
         await ctx.respond("Status was changed!")
 
 
