@@ -54,7 +54,7 @@ class Moderation(ezcord.Cog,emoji="🕵️‍♂️", description="Moderation Co
             color=discord.Color.green()
         )
         unban_embed.add_field(name="Reason", value=reason)
-        unban_embed.set_image(url="https://media1.tenor.com/m/B3iUTS5HXAAAAAAC/quby-cute.gif")
+        unban_embed.set_thumbnail(url="https://media1.tenor.com/m/B3iUTS5HXAAAAAAC/quby-cute.gif")
         unban_embed.set_thumbnail(url=f"{user.display_avatar}")
 
         await ctx.response.send_message(embed=unban_embed, ephemeral=True)

@@ -4,8 +4,8 @@ from discord.commands import slash_command
 import requests
 
 
-class Memes(ezcord.Cog, emoji="😂", description="Sending Random Memes",group="UserCmds"):
-    @slash_command()
+class Memes(ezcord.Cog, emoji="😂",group="UserCmds"):
+    @slash_command(description="Sending Random Memes")
     async def memes(self, ctx:discord.ApplicationContext):
         r = requests.get("https://meme-api.com/gimme")
         res= r.json()

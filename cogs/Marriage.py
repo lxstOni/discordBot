@@ -35,7 +35,7 @@ class Marriage(ezcord.Cog, emoji="💍"):
         conn.commit()
         conn.close()
 
-    @slash_command()
+    @slash_command(description="ask someone to marry you")
     async def marry(self, ctx: discord.ApplicationContext, member: discord.Member):
         if member == ctx.author:
             await ctx.respond("You can't marry yourself!", ephemeral=True)
