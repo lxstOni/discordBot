@@ -13,7 +13,7 @@ class LevelSystem(ezcord.Cog, emoji="📶"):
         self.DB = self.setup_db()
 
     def setup_db(self):
-        db_path = 'source/level.db'
+        db_path = 'source/db/level.db'
         db_folder = os.path.dirname(db_path)
         if not os.path.exists(db_folder):
             os.makedirs(db_folder)

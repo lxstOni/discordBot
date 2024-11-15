@@ -7,7 +7,7 @@ import asyncio
 import ezcord
 
 def setup_db():
-    db_path = 'source/tickets.db'
+    db_path = 'source/db/tickets.db'
     db_folder = os.path.dirname(db_path)
     if not os.path.exists(db_folder):
         os.makedirs(db_folder)
