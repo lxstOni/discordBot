@@ -77,7 +77,6 @@ class LevelSystem(ezcord.Cog, emoji="📶"):
             )
             await db.commit()
 
-        # check level up
         new_xp = await self.get_xp(message.author.id)
 
         old_level = self.get_level(new_xp - xp)
@@ -86,7 +85,6 @@ class LevelSystem(ezcord.Cog, emoji="📶"):
         if old_level == new_level:
             return
 
-        # Check for specific level milestones
         level_milestones = [2, 5, 10, 20]
         if new_level in level_milestones:
             role_name = f"Level {new_level}"

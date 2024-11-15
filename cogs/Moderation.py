@@ -4,7 +4,7 @@ from discord.commands import slash_command, Option
 from discord.utils import basic_autocomplete
 from discord.ext import commands
 
-clear_amount = [10, 25, 50,100]
+clear_amount = [10, 25, 50,100,125,150]
 
 
 class Moderation(ezcord.Cog,emoji="🕵️‍♂️", description="Moderation Commands", hidden=True):
