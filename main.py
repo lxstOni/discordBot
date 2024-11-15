@@ -2,9 +2,7 @@ import discord
 import ezcord
 import os
 from dotenv import load_dotenv
-import logging
-
-
+from pathlib import Path
 
 load_dotenv()
 status = discord.Status.dnd
