@@ -5,11 +5,11 @@ import requests
 
 
 class MyView(discord.ui.View):
-    @discord.ui.select( # the decorator that lets you specify the properties of the select menu
-        placeholder = "RockPaperScissors", # the placeholder text that will be displayed if nothing is selected
-        min_values = 1, # the minimum number of values that must be selected by the users
-        max_values = 1,# the maximum number of values that can be selected by the users
-        options = [ # the list of options from which users can choose, a required field
+    @discord.ui.select(
+        placeholder = "RockPaperScissors",
+        min_values = 1, 
+        max_values = 1,
+        options = [
             discord.SelectOption(
                 label="Rock",
                 description="Rock beats scissors!"
