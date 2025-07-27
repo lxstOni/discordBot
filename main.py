@@ -13,7 +13,7 @@ status = discord.Status.dnd
 bot = ezcord.Bot(
     intents=discord.Intents.all(),
     language="de",
-    debug_guilds=[1305837473535885324],
+    debug_guilds=[1396423046289555516],
     status=status
 )
 bot.add_help_command()

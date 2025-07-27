@@ -6,3 +6,4 @@ data/tickets.db
 log
 .log
 .env
+/source/*
