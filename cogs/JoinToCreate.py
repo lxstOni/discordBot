@@ -4,6 +4,7 @@ import json
 from discord.ext import commands
 
 
+temp_file_path = "/workspaces/discordBot/source/temporary_data.json"
 class JoinToCreate(ezcord.Cog, emoji="🔛"):
 
     def __init__(self, bot):
@@ -11,12 +12,12 @@ class JoinToCreate(ezcord.Cog, emoji="🔛"):
         self.load_data()
 
     def save_data(self):
-        with open("temporary_data.json", "w") as json_file:
+        with open(temp_file_path, "w") as json_file:
             json.dump(self.temporary_data, json_file, indent=4)
 
     def load_data(self):
         try:
-            with open("temporary_data.json", "r") as json_file:
+            with open(temp_file_path, "r") as json_file:
                 self.temporary_data = json.load(json_file)
         except FileNotFoundError:
             self.temporary_data = {
@@ -29,7 +30,7 @@ class JoinToCreate(ezcord.Cog, emoji="🔛"):
         possible_channel_name = f"{member.display_name}'s area"
         
         if after.channel:
-            if after.channel.name == "temp":
+            if after.channel.name == "➕・Lobby":
                 temp_channel = await after.channel.clone(name=possible_channel_name)
                 await member.move_to(temp_channel)
                 self.temporary_data["temporary_channels"][temp_channel.id] = {
