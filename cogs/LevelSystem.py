@@ -7,7 +7,7 @@ import random
 import os
 
 
-class LevelSystem(ezcord.Cog, emoji="📶"):
+class LevelSystem(ezcord.Cog, emoji="📶", description="Level System - Verdiene XP und steige auf"):
     def __init__(self, bot):
         self.bot = bot
         self.DB = self.setup_db()

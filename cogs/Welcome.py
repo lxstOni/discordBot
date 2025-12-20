@@ -8,7 +8,7 @@ import os
 
 image_path = 'data/Images/pic1.jpg'
 
-class Welcome(ezcord.Cog, emoji="👋"):
+class Welcome(ezcord.Cog, emoji="👋", description="Welcome System - Begrüße neue Member"):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

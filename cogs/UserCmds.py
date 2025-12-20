@@ -3,8 +3,8 @@ import ezcord
 from discord.commands import slash_command
 
 
-class UserCmds(ezcord.Cog, emoji="🗣️", description="Standard Usercommands like Userinfo etc."):
-    @slash_command(description="User Infos")
+class UserCmds(ezcord.Cog, emoji="�", description="Benutzer- und Server-Informationen"):
+    @slash_command(description="Zeige Informationen über einen User")
     async def userinfo(self, ctx:discord.ApplicationContext, member: discord.Member):
         userinfo_embed = discord.Embed(title="Userinfo",
                                       description=f"Userinfo for {member.mention}",

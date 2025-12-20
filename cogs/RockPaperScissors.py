@@ -28,7 +28,7 @@ class MyView(discord.ui.View):
         await interaction.response.send_message(f"{interaction.user} has picked **{select.values[0]}** !")
 
 
-class RockPaperScissors(ezcord.Cog, emoji="✋",group="UserCmds"):
+class RockPaperScissors(ezcord.Cog, emoji="✋", description="Stein Papier Schere Spiel"):
     @slash_command(description="Play Rock Paper Scissors with friends")
     async def rps(self,ctx:discord.ApplicationContext):
         await ctx.respond("Please Rock,Paper or Scissors",view=MyView())

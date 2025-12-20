@@ -13,10 +13,9 @@ status = discord.Status.dnd
 bot = ezcord.Bot(
     intents=discord.Intents.all(),
     language="de",
-    debug_guilds=[1396423046289555516],
+    debug_guilds=[1427289795931144334],
     status=status
 )
-bot.add_help_command()
 
 
 def log_folder_exist():
@@ -31,4 +30,3 @@ if __name__ == "__main__":
     bot.load_cogs("cogs")
     settings.setup_logger()
     bot.run(os.getenv("TOKEN"))
-    log_folder_exist()

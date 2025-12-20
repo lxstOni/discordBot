@@ -1,0 +1,28 @@
+2025-12-20 22:19:31 - discord_bot - INFO - Logger wurde erfolgreich eingerichtet.
+2025-12-20 22:21:22 - discord_bot - INFO - Logger wurde erfolgreich eingerichtet.
+2025-12-20 22:32:21 - discord_bot - INFO - Logger wurde erfolgreich eingerichtet.
+2025-12-20 22:39:07 - discord_bot - INFO - Logger wurde erfolgreich eingerichtet.
+2025-12-20 22:40:29 - discord_bot - INFO - Logger wurde erfolgreich eingerichtet.
+2025-12-20 22:41:07 - discord_bot - INFO - Ticket-System in Oni's Lounge eingerichtet
+2025-12-20 22:41:09 - discord_bot - INFO - Ticket erstellt: Guild 1427289795931144334, User 1305835830656630795, Channel 1452068334299385857
+2025-12-20 22:41:09 - discord_bot - INFO - Ticket erstellt für lxstoni (1305835830656630795) auf Oni's Lounge
+2025-12-20 22:41:17 - discord_bot - INFO - Ticket gelöscht: Guild 1427289795931144334, User 1305835830656630795
+2025-12-20 22:41:20 - discord_bot - ERROR - Fehler beim Schließen des Tickets: 404 Not Found (error code: 10062): Unknown interaction
+2025-12-20 23:17:38 - discord_bot - INFO - Logger wurde erfolgreich eingerichtet.
+2025-12-20 23:18:02 - discord_bot - INFO - Ticket-Kategorie erstellt: 1452077618252877875
+2025-12-20 23:18:03 - discord_bot - INFO - Ticket-System Setup für Guild 1427289795931144334 gestartet
+2025-12-20 23:18:11 - discord_bot - INFO - Ticket-Rollen für Guild 1427289795931144334 konfiguriert
+2025-12-20 23:18:28 - discord_bot - INFO - Ticket-Button für Guild 1427289795931144334 erstellt
+2025-12-20 23:18:30 - discord_bot - INFO - Ticket erstellt: Guild 1427289795931144334, User 1305835830656630795, Channel 1452077734011469876
+2025-12-20 23:18:31 - discord_bot - INFO - Ticket erstellt für lxstoni (1305835830656630795) auf Oni's Lounge
+2025-12-20 23:18:44 - discord_bot - INFO - Ticket gelöscht: Guild 1427289795931144334, User 1305835830656630795
+2025-12-20 23:18:44 - discord_bot - ERROR - Fehler beim Schließen des Tickets: 400 Bad Request (error code: 10003): Unknown Channel
+2025-12-20 23:27:39 - discord_bot - INFO - Logger wurde erfolgreich eingerichtet.
+2025-12-20 23:28:02 - discord_bot - INFO - Ticket-Kategorie erstellt: 1452080133790761065
+2025-12-20 23:28:02 - discord_bot - INFO - Ticket-System Setup für Guild 1427289795931144334 gestartet
+2025-12-20 23:28:09 - discord_bot - INFO - Ticket-Rollen für Guild 1427289795931144334 konfiguriert
+2025-12-20 23:28:17 - discord_bot - INFO - Ticket-Button für Guild 1427289795931144334 erstellt
+2025-12-20 23:28:23 - discord_bot - INFO - Ticket erstellt: Guild 1427289795931144334, User 1305835830656630795, Channel 1452080220772503571
+2025-12-20 23:28:23 - discord_bot - INFO - Ticket erstellt für lxstoni (1305835830656630795) auf Oni's Lounge
+2025-12-20 23:28:40 - discord_bot - INFO - Ticket gelöscht: Guild 1427289795931144334, User 1305835830656630795
+2025-12-20 23:28:40 - discord_bot - INFO - Ticket geschlossen von lxstoni

@@ -4,7 +4,7 @@ from discord.commands import slash_command, Option
 from discord.ext import commands
 
 
-class OwnerCmds(ezcord.Cog, emoji="🔑", description="Bot Owner only Commands", hidden=True):
+class OwnerCmds(ezcord.Cog, emoji="🔑", description="Bot Owner Commands - Nur für den Bot Owner", hidden=False):
 
     @slash_command(description="Owner Only Command")
     @commands.is_owner()

@@ -7,7 +7,7 @@ from discord.ext import commands
 clear_amount = [10, 25, 50,100,125,150]
 
 
-class Moderation(ezcord.Cog,emoji="🕵️‍♂️", description="Moderation Commands", hidden=True):
+class Moderation(ezcord.Cog, emoji="🕵️‍♂️", description="Moderations-Commands: Ban, Kick, Clear", hidden=False):
     @slash_command(description="Ban a user")
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, member: discord.Member):

@@ -5,7 +5,7 @@ from discord.ext import commands
 
 
 temp_file_path = "/workspaces/discordBot/source/temporary_data.json"
-class JoinToCreate(ezcord.Cog, emoji="🔛"):
+class JoinToCreate(ezcord.Cog, emoji="🔛", description="Join to Create - Automatische Kanäle beim Beitreten"):
 
     def __init__(self, bot):
         self.bot = bot

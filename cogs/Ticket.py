@@ -1,40 +1,139 @@
 import discord
 from discord.ext import commands
-from discord.ui import Button, View
-import sqlite3
+from discord.ui import Button, View, Select
+import aiosqlite
 import os
 import asyncio
 import ezcord
+import logging
+import json
 
-def setup_db():
-    db_path = 'source/db/tickets.db'
-    db_folder = os.path.dirname(db_path)
-    if not os.path.exists(db_folder):
-        os.makedirs(db_folder)
+logger = logging.getLogger('discord_bot')
 
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS tickets
-        (guild_id INTEGER, user_id INTEGER, channel_id INTEGER,
-        PRIMARY KEY (guild_id, user_id))
-    ''')
-    conn.commit()
-    conn.close()
+# Konstanten
+DB_PATH = 'source/db/tickets.db'
+DB_FOLDER = os.path.dirname(DB_PATH)
+
+
+async def _load_config_from_db(guild_id: int):
+    """Lade die Ticket-Konfiguration aus der Datenbank"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute('''
+                SELECT allowed_roles FROM ticket_config WHERE guild_id = ?
+            ''', (guild_id,)) as cursor:
+                result = await cursor.fetchone()
+                if result:
+                    return json.loads(result[0])  # allowed_roles ist JSON String
+                return []
+    except Exception as e:
+        logger.error(f"Fehler beim Laden der Ticket-Config aus DB: {e}")
+        return []
+
+
+async def _save_config_to_db(guild_id: int, allowed_role_ids: list, role_names: list):
+    """Speichere die Ticket-Konfiguration in der Datenbank"""
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            allowed_roles_json = json.dumps(allowed_role_ids)
+            await db.execute('''
+                INSERT OR REPLACE INTO ticket_config (guild_id, allowed_roles, role_names)
+                VALUES (?, ?, ?)
+            ''', (guild_id, allowed_roles_json, json.dumps(role_names)))
+            await db.commit()
+    except Exception as e:
+        logger.error(f"Fehler beim Speichern der Ticket-Config in DB: {e}")
+
+
+class RoleSelectDropdown(Select):
+    """Dropdown zur Auswahl von Rollen für Ticket-Zugriff"""
+    
+    def __init__(self, bot, guild):
+        self.bot = bot
+        self.guild = guild
+        
+        # Sammle alle Rollen (außer @everyone)
+        options = [
+            discord.SelectOption(
+                label=role.name,
+                value=str(role.id),
+                emoji="👤"
+            )
+            for role in sorted(guild.roles, key=lambda r: r.position, reverse=True)
+            if role.name != "@everyone" and not role.managed
+        ]
+        
+        super().__init__(
+            placeholder="Wähle Rollen die Tickets bearbeiten können...",
+            min_values=1,
+            max_values=min(len(options), 25) if options else 1,
+            options=options[:25]  # Discord Limit: 25 Optionen
+        )
+    
+    async def callback(self, interaction: discord.Interaction):
+        """Speichere die ausgewählten Rollen in der DB"""
+        await interaction.response.defer()
+        
+        selected_role_ids = [int(role_id) for role_id in self.values]
+        role_names = [self.guild.get_role(rid).name for rid in selected_role_ids if self.guild.get_role(rid)]
+        
+        # Speichere Config in DB
+        await _save_config_to_db(self.guild.id, selected_role_ids, role_names)
+        
+        # Aktualisiere das Embed
+        embed = discord.Embed(
+            title="✅ Ticket-Rollen konfiguriert",
+            description="Die folgenden Rollen können jetzt Tickets bearbeiten:",
+            color=discord.Color.green()
+        )
+        
+        role_text = "\n".join([
+            f"• {self.guild.get_role(rid).mention}"
+            for rid in selected_role_ids
+            if self.guild.get_role(rid)
+        ])
+        embed.add_field(name="Berechtigte Rollen", value=role_text, inline=False)
+        embed.add_field(
+            name="🎫 Ticket Button",
+            value="Jetzt kannst du einen Button mit `/setup_ticket_message` hinzufügen!",
+            inline=False
+        )
+        
+        await interaction.edit_original_response(embed=embed, view=None)
+        logger.info(f"Ticket-Rollen für Guild {self.guild.id} konfiguriert")
+
+
+class RoleSelectView(View):
+    """View für die Rollen-Auswahl"""
+    
+    def __init__(self, bot, guild):
+        super().__init__()
+        self.add_item(RoleSelectDropdown(bot, guild))
 
 
 class CreateTicketButton(Button):
+    """Button zum Erstellen eines neuen Tickets"""
     def __init__(self, bot):
-        super().__init__(style=discord.ButtonStyle.green, label="Create Ticket", emoji="🎫")
+        super().__init__(
+            style=discord.ButtonStyle.green,
+            label="Create Ticket",
+            emoji="🎫"
+        )
         self.bot = bot
 
     async def callback(self, interaction: discord.Interaction):
         ticket_system = self.bot.get_cog('TicketSystem')
         await ticket_system.create_ticket(interaction)
 
+
 class CloseTicketButton(Button):
-    def __init__(self, bot, guild_id, member_id):
-        super().__init__(style=discord.ButtonStyle.red, label="Close Ticket", emoji="🔒")
+    """Button zum Schließen eines Tickets"""
+    def __init__(self, bot, guild_id: int, member_id: int):
+        super().__init__(
+            style=discord.ButtonStyle.red,
+            label="Close Ticket",
+            emoji="🔒"
+        )
         self.bot = bot
         self.guild_id = guild_id
         self.member_id = member_id
@@ -43,118 +142,438 @@ class CloseTicketButton(Button):
         ticket_system = self.bot.get_cog('TicketSystem')
         await ticket_system.close_ticket(interaction, self.guild_id, self.member_id)
 
+
 class TicketView(View):
+    """View mit Create-Ticket Button"""
     def __init__(self, bot):
         super().__init__(timeout=None)
         self.add_item(CreateTicketButton(bot))
 
+
 class CloseTicketView(View):
-    def __init__(self, bot, guild_id, member_id):
+    """View mit Close-Ticket Button"""
+    def __init__(self, bot, guild_id: int, member_id: int):
         super().__init__(timeout=None)
         self.add_item(CloseTicketButton(bot, guild_id, member_id))
 
+
 class TicketSystem(ezcord.Cog, emoji="🎫"):
+    """
+    Verwaltungssystem für Support-Tickets mit Rollen-Permissions.
+    
+    Funktionen:
+    - Setup mit automatischer Kategorie-Erstellung
+    - Rollen-basierte Permissions
+    - Speicherung in Datenbank
+    - Ticket-Verwaltung
+    """
+    
     def __init__(self, bot):
         self.bot = bot
-        self.db_path = 'data/tickets.db'
-
-
-    def add_ticket(self, guild_id, user_id, channel_id):
+        self.db_path = DB_PATH
+        self._init_db()
+    
+    def _init_db(self):
+        """Initialisiert die Datenbank synchron."""
+        if not os.path.exists(DB_FOLDER):
+            os.makedirs(DB_FOLDER)
+        
+        import sqlite3
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute('''
-            INSERT OR REPLACE INTO tickets (guild_id, user_id, channel_id)
-            VALUES (?, ?, ?)
-        ''', (guild_id, user_id, channel_id))
+            CREATE TABLE IF NOT EXISTS tickets
+            (
+                guild_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                channel_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (guild_id, user_id)
+            )
+        ''')
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS ticket_config
+            (
+                guild_id INTEGER PRIMARY KEY,
+                allowed_roles TEXT NOT NULL,
+                role_names TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
         conn.commit()
         conn.close()
+        logger.info("Ticket-Datenbank initialisiert")
 
-    def remove_ticket(self, guild_id, user_id):
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute('''
-            DELETE FROM tickets WHERE guild_id = ? AND user_id = ?
-        ''', (guild_id, user_id))
-        conn.commit()
-        conn.close()
+    async def add_ticket(self, guild_id: int, user_id: int, channel_id: int):
+        """Speichert ein neues Ticket in der Datenbank."""
+        try:
+            async with aiosqlite.connect(self.db_path) as db:
+                await db.execute('''
+                    INSERT OR REPLACE INTO tickets (guild_id, user_id, channel_id)
+                    VALUES (?, ?, ?)
+                ''', (guild_id, user_id, channel_id))
+                await db.commit()
+                logger.info(f"Ticket erstellt: Guild {guild_id}, User {user_id}, Channel {channel_id}")
+        except Exception as e:
+            logger.error(f"Fehler beim Speichern des Tickets: {e}")
 
-    def get_ticket(self, guild_id, user_id):
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute('''
-            SELECT channel_id FROM tickets WHERE guild_id = ? AND user_id = ?
-        ''', (guild_id, user_id))
-        result = c.fetchone()
-        conn.close()
-        return result[0] if result else None
+    async def remove_ticket(self, guild_id: int, user_id: int):
+        """Löscht ein Ticket aus der Datenbank."""
+        try:
+            async with aiosqlite.connect(self.db_path) as db:
+                await db.execute('''
+                    DELETE FROM tickets WHERE guild_id = ? AND user_id = ?
+                ''', (guild_id, user_id))
+                await db.commit()
+                logger.info(f"Ticket gelöscht: Guild {guild_id}, User {user_id}")
+        except Exception as e:
+            logger.error(f"Fehler beim Löschen des Tickets: {e}")
 
-    @commands.slash_command(name="setup_ticket", description="Sets up the ticket system")
+    async def get_ticket(self, guild_id: int, user_id: int) -> int | None:
+        """Ruft die Channel-ID eines Tickets ab."""
+        try:
+            async with aiosqlite.connect(self.db_path) as db:
+                async with db.execute('''
+                    SELECT channel_id FROM tickets WHERE guild_id = ? AND user_id = ?
+                ''', (guild_id, user_id)) as cursor:
+                    result = await cursor.fetchone()
+                    return result[0] if result else None
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen des Tickets: {e}")
+            return None
+
+    def _get_allowed_roles(self, guild_id: int) -> list:
+        """Hole die erlaubten Rollen für einen Server (synchron)"""
+        import sqlite3
+        try:
+            conn = sqlite3.connect(self.db_path)
+            c = conn.cursor()
+            c.execute('SELECT allowed_roles FROM ticket_config WHERE guild_id = ?', (guild_id,))
+            result = c.fetchone()
+            conn.close()
+            if result:
+                return json.loads(result[0])
+            return []
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen der Ticket-Rollen: {e}")
+            return []
+
+    async def user_can_manage_tickets(self, member: discord.Member) -> bool:
+        """Prüfe ob ein User Tickets bearbeiten darf"""
+        if member.guild_permissions.administrator:
+            return True
+        
+        allowed_role_ids = self._get_allowed_roles(member.guild.id)
+        if not allowed_role_ids:
+            return member.guild_permissions.manage_messages
+        
+        return any(role.id in allowed_role_ids for role in member.roles)
+
+    @commands.slash_command(name="setup_ticket", description="Richtet das Ticket-System ein und erstellt die Kategorie")
     @commands.has_permissions(administrator=True)
     async def setup_ticket(self, ctx):
-        embed = discord.Embed(
-            title="Support Ticket",
-            description="Click the button below to create a support ticket.",
-            color=discord.Color.blue()
-        )
-        view = TicketView(self.bot)
-        await ctx.respond(embed=embed, view=view)
+        """
+        Erstellt eine Ticket-Kategorie und zeigt Rollen-Auswahl Dropdown.
+        Nur Admins können diesen Befehl ausführen.
+        """
+        try:
+            await ctx.defer()
+            
+            guild = ctx.guild
+            
+            # Erstelle Ticket-Kategorie
+            existing_category = discord.utils.get(guild.categories, name="🎫 Support Tickets")
+            if existing_category:
+                category = existing_category
+                logger.info(f"Ticket-Kategorie bereits vorhanden: {category.id}")
+            else:
+                category = await guild.create_category(name="🎫 Support Tickets")
+                logger.info(f"Ticket-Kategorie erstellt: {category.id}")
+            
+            # Erstelle Setup-Nachricht
+            embed = discord.Embed(
+                title="🎫 Ticket System Setup",
+                description="Wähle die Rollen aus, die Tickets bearbeiten können.",
+                color=discord.Color.blurple()
+            )
+            embed.add_field(
+                name="📋 Kategorie",
+                value=f"✅ Ticket-Kategorie erstellt: {category.mention}",
+                inline=False
+            )
+            embed.add_field(
+                name="💡 Nächster Schritt",
+                value="Wähle die Rollen die Tickets bearbeiten können (Supporter, Moderator, etc.)",
+                inline=False
+            )
+            
+            # Zeige Rollen-Auswahl
+            view = RoleSelectView(self.bot, guild)
+            await ctx.respond(embed=embed, view=view)
+            
+            logger.info(f"Ticket-System Setup für Guild {guild.id} gestartet")
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Setup des Ticket-Systems: {e}")
+            await ctx.respond(f"❌ Fehler beim Setup: {e}", ephemeral=True)
+
+    @commands.slash_command(name="setup_ticket_message", description="Erstellt die Nachricht mit dem Create Ticket Button")
+    @commands.has_permissions(administrator=True)
+    async def setup_ticket_message(self, ctx):
+        """
+        Erstellt eine Nachricht mit dem Create Ticket Button.
+        Muss nach /setup_ticket ausgeführt werden.
+        """
+        try:
+            await ctx.defer()
+            
+            guild = ctx.guild
+            allowed_roles = self._get_allowed_roles(guild.id)
+            
+            if not allowed_roles:
+                await ctx.respond(
+                    "❌ Ticket-System noch nicht konfiguriert.\nFühre erst `/setup_ticket` aus!",
+                    ephemeral=True
+                )
+                return
+            
+            # Erstelle die Nachricht mit dem Button
+            embed = discord.Embed(
+                title="🎫 Support Ticket erstellen",
+                description="Klicke auf den Button unten, um ein neues Support-Ticket zu erstellen.",
+                color=discord.Color.blue()
+            )
+            embed.add_field(
+                name="Was ist ein Ticket?",
+                value="Ein privater Kanal nur für dich und dem Support-Team um dein Anliegen zu bearbeiten.",
+                inline=False
+            )
+            embed.add_field(
+                name="❓ Du brauchst Hilfe?",
+                value="Erstelle einfach ein Ticket und warte auf eine Antwort vom Support-Team!",
+                inline=False
+            )
+            
+            view = TicketView(self.bot)
+            await ctx.channel.send(embed=embed, view=view)
+            
+            await ctx.respond(
+                "✅ Ticket-Button wurde erstellt!",
+                ephemeral=True
+            )
+            logger.info(f"Ticket-Button für Guild {guild.id} erstellt")
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Erstellen der Ticket-Nachricht: {e}")
+            await ctx.respond(f"❌ Fehler: {e}", ephemeral=True)
+            
+            # Erstelle die Nachricht mit dem Button
+            embed = discord.Embed(
+                title="🎫 Support Ticket erstellen",
+                description="Klicke auf den Button unten, um ein neues Support-Ticket zu erstellen.",
+                color=discord.Color.blue()
+            )
+            embed.add_field(
+                name="Was ist ein Ticket?",
+                value="Ein privater Kanal nur für dich und dem Support-Team um dein Anliegen zu bearbeiten.",
+                inline=False
+            )
+            embed.add_field(
+                name="❓ Du brauchst Hilfe?",
+                value="Erstelle einfach ein Ticket und warte auf eine Antwort vom Support-Team!",
+                inline=False
+            )
+            
+            view = TicketView(self.bot)
+            await ctx.channel.send(embed=embed, view=view)
+            
+            await ctx.respond(
+                "✅ Ticket-Button wurde erstellt!",
+                ephemeral=True
+            )
+            logger.info(f"Ticket-Button für Guild {guild.id} erstellt")
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Erstellen der Ticket-Nachricht: {e}")
+            await ctx.respond(f"❌ Fehler: {e}", ephemeral=True)
 
     async def create_ticket(self, interaction: discord.Interaction):
+        """
+        Erstellt einen neuen Ticket-Kanal für einen User.
+        """
         guild = interaction.guild
         member = interaction.user
+        
+        # Bestätige die Interaction sofort (SEHR WICHTIG!)
+        await interaction.response.defer(ephemeral=True)
 
-        existing_channel_id = self.get_ticket(guild.id, member.id)
-        if existing_channel_id:
-            existing_channel = guild.get_channel(existing_channel_id)
-            if existing_channel:
-                await interaction.response.send_message(f"You already have an open ticket: {existing_channel.mention}",
-                                                        ephemeral=True)
+        try:
+            # Prüfe ob User bereits ein Ticket hat
+            existing_channel_id = await self.get_ticket(guild.id, member.id)
+            if existing_channel_id:
+                existing_channel = guild.get_channel(existing_channel_id)
+                if existing_channel:
+                    await interaction.followup.send(
+                        f"❌ Du hast bereits ein offenes Ticket: {existing_channel.mention}",
+                        ephemeral=True
+                    )
+                    return
+                else:
+                    await self.remove_ticket(guild.id, member.id)
+
+            # Hole Ticket-Kategorie
+            category = discord.utils.get(guild.categories, name="🎫 Support Tickets")
+            if not category:
+                await interaction.followup.send(
+                    "❌ Ticket-System nicht konfiguriert. Bitte Admin kontaktieren.",
+                    ephemeral=True
+                )
                 return
-            else:
-                self.remove_ticket(guild.id, member.id)
 
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            member: discord.PermissionOverwrite(read_messages=True, send_messages=True),
-            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
-        }
+            # Hole erlaubte Rollen
+            allowed_role_ids = self._get_allowed_roles(guild.id)
+            
+            # Erstelle Channel mit Permissions
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                member: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+                guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
+            }
+            
+            # Füge Supporter-Rollen hinzu
+            for role_id in allowed_role_ids:
+                role = guild.get_role(role_id)
+                if role:
+                    overwrites[role] = discord.PermissionOverwrite(
+                        read_messages=True,
+                        send_messages=True,
+                        manage_messages=True
+                    )
 
-        channel = await guild.create_text_channel(f"ticket-{member.name}", overwrites=overwrites,
-                                                  category=interaction.channel.category)
+            channel = await guild.create_text_channel(
+                f"ticket-{member.name}",
+                overwrites=overwrites,
+                category=category,
+                topic=f"Support Ticket von {member.mention} | ID: {member.id}"
+            )
 
-        self.add_ticket(guild.id, member.id, channel.id)
+            # Speichere Ticket in DB
+            await self.add_ticket(guild.id, member.id, channel.id)
 
-        embed = discord.Embed(
-            title="New Support Ticket",
-            description=f"Welcome {member.mention}! Please describe your issue. A team member will assist you shortly.",
-            color=discord.Color.green()
-        )
-        view = CloseTicketView(self.bot, guild.id, member.id)
-        await channel.send(embed=embed, view=view)
-        await interaction.response.send_message(f"Your ticket has been created: {channel.mention}", ephemeral=True)
+            # Sende Willkommens-Nachricht im Ticket
+            embed = discord.Embed(
+                title="🎫 Neues Support Ticket",
+                description=f"Willkommen {member.mention}! Beschreibe bitte dein Anliegen. Das Support-Team wird sich gleich um dich kümmern.",
+                color=discord.Color.green()
+            )
+            embed.add_field(
+                name="💡 Tipps",
+                value="• Sei detailliert bei deinem Problem\n• Poste Screenshots wenn nötig\n• Warte geduldig auf eine Antwort",
+                inline=False
+            )
+            
+            view = CloseTicketView(self.bot, guild.id, member.id)
+            await channel.send(embed=embed, view=view)
+            
+            # Benachrichtige den User
+            await interaction.followup.send(
+                f"✅ Dein Ticket wurde erstellt: {channel.mention}",
+                ephemeral=True
+            )
+            logger.info(f"Ticket erstellt für {member.name} ({member.id}) auf {guild.name}")
 
-    async def close_ticket(self, interaction: discord.Interaction, guild_id, member_id):
-        channel_id = self.get_ticket(guild_id, member_id)
-        if not channel_id:
-            await interaction.response.send_message("This ticket no longer exists.", ephemeral=True)
-            return
+        except Exception as e:
+            logger.error(f"Fehler beim Erstellen des Tickets: {e}")
+            await interaction.followup.send(
+                f"❌ Fehler beim Erstellen des Tickets: {e}",
+                ephemeral=True
+            )
 
-        channel = interaction.guild.get_channel(channel_id)
+    async def close_ticket(self, interaction: discord.Interaction, guild_id: int, member_id: int):
+        """
+        Schließt ein Ticket-Kanal und löscht ihn nach 2 Sekunden.
+        WICHTIG: Interaction wird sofort bestätigt!
+        """
+        try:
+            # Bestätige die Interaction sofort (SEHR WICHTIG!)
+            await interaction.response.defer(ephemeral=True)
+        except:
+            pass  # Kann bereits bestätigt sein
 
-        if channel:
-            await channel.send("This ticket will be closed in 2 seconds.")
-            await asyncio.sleep(2)
-            await channel.delete()
+        try:
+            channel_id = await self.get_ticket(guild_id, member_id)
+            if not channel_id:
+                try:
+                    await interaction.followup.send(
+                        "❌ Dieses Ticket existiert nicht mehr.",
+                        ephemeral=True
+                    )
+                except:
+                    pass
+                return
 
-        self.remove_ticket(guild_id, member_id)
+            channel = interaction.guild.get_channel(channel_id)
 
-        user = await self.bot.fetch_user(member_id)
-        await user.send(f"Your ticket on the server {interaction.guild.name} has been closed.")
+            # Sende Bestätigung ZUERST (bevor Channel gelöscht wird)
+            try:
+                await interaction.followup.send(
+                    "✅ Ticket wird geschlossen und gelöscht.",
+                    ephemeral=True
+                )
+            except Exception as e:
+                logger.warning(f"Konnte Bestätigung nicht senden: {e}")
 
-# Set up the database
-setup_db()
+            # DANN mache lange Operationen
+            if channel:
+                # Sende Schließungs-Nachricht
+                close_embed = discord.Embed(
+                    title="🔒 Ticket wird geschlossen",
+                    description="Dieser Kanal wird in 2 Sekunden gelöscht.",
+                    color=discord.Color.red()
+                )
+                try:
+                    await channel.send(embed=close_embed)
+                except Exception as e:
+                    logger.warning(f"Konnte Schließungs-Nachricht nicht senden: {e}")
+                
+                await asyncio.sleep(2)
+                
+                # Lösche Kanal
+                try:
+                    await channel.delete()
+                except Exception as e:
+                    logger.warning(f"Konnte Channel nicht löschen: {e}")
+
+            # Lösche aus DB
+            await self.remove_ticket(guild_id, member_id)
+
+            # Benachrichtige User per DM
+            try:
+                user = await self.bot.fetch_user(member_id)
+                dm_embed = discord.Embed(
+                    title="✅ Ticket geschlossen",
+                    description=f"Dein Support-Ticket auf {interaction.guild.name} wurde geschlossen.",
+                    color=discord.Color.green()
+                )
+                await user.send(embed=dm_embed)
+            except Exception as e:
+                logger.warning(f"Konnte DM nicht senden an User {member_id}: {e}")
+
+            logger.info(f"Ticket geschlossen von {interaction.user.name}")
+
+        except Exception as e:
+            logger.error(f"Fehler beim Schließen des Tickets: {e}")
+            try:
+                await interaction.followup.send(
+                    f"❌ Fehler beim Schließen: {e}",
+                    ephemeral=True
+                )
+            except:
+                pass  # Kann nicht mehr senden
+
 
 def setup(bot):
+    """Lädt den Ticket System Cog."""
     bot.add_cog(TicketSystem(bot))
 
 
