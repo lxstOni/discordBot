@@ -205,7 +205,7 @@ class Help(ezcord.Cog, emoji="❓", description="Help Command - Alle Commands an
         embed.set_footer(text="Help Command mit Kategorie-Auswahl")
         
         view = HelpView(self.bot)
-        await ctx.respond(embed=embed, view=view)
+        await ctx.respond(embed=embed, view=view, ephemeral=True)
 
 
 def setup(bot):

@@ -5,19 +5,13 @@ import ezcord
 import aiosqlite
 import random
 import os
+from source.paths import get_level_db_path
 
 
 class LevelSystem(ezcord.Cog, emoji="📶", description="Level System - Verdiene XP und steige auf"):
     def __init__(self, bot):
         self.bot = bot
-        self.DB = self.setup_db()
-
-    def setup_db(self):
-        db_path = 'source/db/level.db'
-        db_folder = os.path.dirname(db_path)
-        if not os.path.exists(db_folder):
-            os.makedirs(db_folder)
-        return db_path
+        self.DB = get_level_db_path()
 
     @staticmethod
     def get_level(xp):

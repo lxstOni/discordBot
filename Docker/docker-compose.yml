@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  discord-bot:
+    image: lxstOni/discord-bot:latest
+    container_name: discord-bot
+    restart: unless-stopped
+    environment:
+      - TOKEN=${TOKEN}
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+      - ../source/db:/app/source/db
+    env_file:
+      - ../.env
+    networks:
+      - discord-bot-network
+
+networks:
+  discord-bot-network:
+    driver: bridge

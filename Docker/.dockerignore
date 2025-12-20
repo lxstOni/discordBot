@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+dist
+build
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.thumbs
+
+# Logs and databases
+logs/*
+!logs/.gitkeep
+*.log
+
+# Bot specific
+source/db/*.db
+
+# Development
+*.md
+.github/

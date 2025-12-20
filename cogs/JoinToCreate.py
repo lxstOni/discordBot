@@ -2,22 +2,23 @@ import discord
 import ezcord
 import json
 from discord.ext import commands
+from source.paths import get_temp_data_file_path
 
 
-temp_file_path = "/workspaces/discordBot/source/temporary_data.json"
 class JoinToCreate(ezcord.Cog, emoji="🔛", description="Join to Create - Automatische Kanäle beim Beitreten"):
 
     def __init__(self, bot):
         self.bot = bot
+        self.temp_file_path = get_temp_data_file_path()
         self.load_data()
 
     def save_data(self):
-        with open(temp_file_path, "w") as json_file:
+        with open(self.temp_file_path, "w") as json_file:
             json.dump(self.temporary_data, json_file, indent=4)
 
     def load_data(self):
         try:
-            with open(temp_file_path, "r") as json_file:
+            with open(self.temp_file_path, "r") as json_file:
                 self.temporary_data = json.load(json_file)
         except FileNotFoundError:
             self.temporary_data = {

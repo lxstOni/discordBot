@@ -7,11 +7,12 @@ import asyncio
 import ezcord
 import logging
 import json
+from source.paths import get_tickets_db_path
 
 logger = logging.getLogger('discord_bot')
 
 # Konstanten
-DB_PATH = 'source/db/tickets.db'
+DB_PATH = get_tickets_db_path()
 DB_FOLDER = os.path.dirname(DB_PATH)
 
 

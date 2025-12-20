@@ -5,14 +5,15 @@ from discord.utils import get
 from easy_pil import Editor, load_image_async, Font
 import ezcord
 import os
+from source.paths import get_welcome_image_path
 
-image_path = 'data/Images/pic1.jpg'
 
 class Welcome(ezcord.Cog, emoji="👋", description="Welcome System - Begrüße neue Member"):
-
+    
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         channel = member.guild.system_channel
+        image_path = get_welcome_image_path()
 
         pos = sum(m.joined_at < member.joined_at for m in member.guild.members if m.joined_at is not None)
 
