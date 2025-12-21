@@ -6,6 +6,8 @@ data/tickets.db
 log
 .log
 .env
-/source/*
+
+# Source keep code, ignore only DB artifacts
+/source/db/*.db
 cogs/.env.example
 /logs/*
