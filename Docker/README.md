@@ -1,6 +1,6 @@
 # Docker Konfiguration
 
-Das Discord Bot Image ist auf Docker Hub verfügbar: **[lxstOni/discord-bot](https://hub.docker.com/r/lxstOni/discord-bot)**
+Das Discord Bot Image ist auf Docker Hub verfügbar: **[lxstoni/discordbot](https://hub.docker.com/r/lxstoni/discordbot)**
 
 Alle Docker-bezogenen Dateien für einfaches Deployment.
 
@@ -57,7 +57,7 @@ docker-compose -f Docker/docker-compose.yml down
 
 ```bash
 # Image pullen
-docker pull lxstOni/discord-bot:latest
+docker pull lxstoni/discordbot:latest
 
 # Container starten
 docker run -d \
@@ -67,7 +67,7 @@ docker run -d \
   -v $(pwd)/logs:/app/logs \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/source/db:/app/source/db \
-  lxstOni/discord-bot:latest
+  lxstoni/discordbot:latest
 
 # Logs anschauen
 docker logs -f discord-bot
@@ -103,7 +103,9 @@ TOKEN=your_discord_token_here
 Falls du das Image selbst bauen möchtest:
 
 ```bash
-docker build -f Docker/Dockerfile -t discord-bot:local .
+# Wichtig: Der Build-Kontext muss das Projekt-Root sein (Punkt),
+# nicht der Docker/ Ordner, sonst fehlt requirements.txt.
+docker build -f Docker/Dockerfile -t discordbot:local .
 docker run -d \
   --name discord-bot \
   --restart unless-stopped \
@@ -111,7 +113,7 @@ docker run -d \
   -v $(pwd)/logs:/app/logs \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/source/db:/app/source/db \
-  discord-bot:local
+  discordbot:local
 ```
 
 ---

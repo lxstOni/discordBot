@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   discord-bot:
-    image: lxstOni/discord-bot:latest
+    image: lxstoni/discordbot:latest
     container_name: discord-bot
     restart: unless-stopped
     environment:

@@ -2,7 +2,7 @@
 
 Ein vollständig modulares Discord Bot-System mit erweiterten Features für Serververwaltung, Ticketsystem, Levelingsystem, Spiele und mehr.
 
-**Image:** [`lxstOni/discord-bot`](https://hub.docker.com/r/lxstOni/discord-bot) auf Docker Hub
+**Image:** [`lxstoni/discordbot`](https://hub.docker.com/r/lxstoni/discordbot) auf Docker Hub
 
 ---
 
@@ -81,6 +81,13 @@ docker-compose -f Docker/docker-compose.yml up -d
 
 # Logs: docker-compose -f Docker/docker-compose.yml logs -f
 # Stop:  docker-compose -f Docker/docker-compose.yml down
+```
+
+**Eigenes Image bauen (optional, wenn du Code änderst):**
+
+```bash
+# Wichtig: Build-Kontext ist das Projekt-Root (Punkt), nicht der Docker/ Ordner
+docker build -f Docker/Dockerfile -t discordbot:latest .
 ```
 
 **Vollständige Anleitung:** Siehe [Docker/README.md](Docker/README.md)
