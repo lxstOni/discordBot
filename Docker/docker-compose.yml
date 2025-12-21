@@ -1,5 +1,4 @@
-version: '3.8'
-
+---
 services:
   discord-bot:
     image: lxstoni/discordbot:latest
@@ -11,11 +10,13 @@ services:
       - ../logs:/app/logs
       - ../data:/app/data
       - ../source/db:/app/source/db
-    env_file:
-      - ../.env
-    networks:
-      - discord-bot-network
 
-networks:
-  discord-bot-network:
-    driver: bridge
+# Docker recognizes the .env file if it is in the same directory. The discord bot network is a preference. If none is specified, Docker uses the default bridge network.
+#    env_file:
+#      - ../.env
+#    networks:
+#      - discord-bot-network
+
+#networks:
+#  discord-bot-network:
+#    driver: bridge
