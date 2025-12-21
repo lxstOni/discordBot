@@ -8,3 +8,4 @@ log
 .env
 /source/*
 cogs/.env.example
+/logs/*
