@@ -1,5 +1,5 @@
 # 🤖 Discord Bot - Verwaltungs- & Unterhaltungssystem
-
+### DISCLAIMER: Das ist ein Hobbyprojekt und kein professionelles Projekt!!!
 Ein vollständig modulares Discord Bot-System mit erweiterten Features für Serververwaltung, Ticketsystem, Levelingsystem, Spiele und mehr.
 
 **Image:** [`lxstoni/discordbot`](https://hub.docker.com/r/lxstoni/discordbot) auf Docker Hub
