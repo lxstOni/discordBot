@@ -13,6 +13,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 DB_DIR = PROJECT_ROOT / "source" / "db"
 TICKETS_DB = DB_DIR / "tickets.db"
 LEVEL_DB = DB_DIR / "level.db"
+CONFIG_DB = DB_DIR / "config.db"
 
 # Log Pfade
 LOGS_DIR = PROJECT_ROOT / "logs"
@@ -45,6 +46,11 @@ def get_tickets_db_path() -> str:
 def get_level_db_path() -> str:
     """Gibt den Pfad zur Level Datenbank zurück"""
     return str(LEVEL_DB)
+
+
+def get_config_db_path() -> str:
+    """Pfad zur Konfigurations-Datenbank (GuildConfig/J2C/Reminders/Games)"""
+    return str(CONFIG_DB)
 
 
 def get_logs_dir_path() -> str:

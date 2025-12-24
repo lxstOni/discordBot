@@ -8,6 +8,7 @@ import ezcord
 import logging
 import json
 from source.paths import get_tickets_db_path
+from source.settings import settings
 
 logger = logging.getLogger('discord_bot')
 
@@ -244,17 +245,11 @@ class TicketSystem(ezcord.Cog, emoji="🎫"):
             return None
 
     def _get_allowed_roles(self, guild_id: int) -> list:
-        """Hole die erlaubten Rollen für einen Server (synchron)"""
-        import sqlite3
+        """Hole die erlaubten Rollen für einen Server aus der SQL-Konfiguration"""
         try:
-            conn = sqlite3.connect(self.db_path)
-            c = conn.cursor()
-            c.execute('SELECT allowed_roles FROM ticket_config WHERE guild_id = ?', (guild_id,))
-            result = c.fetchone()
-            conn.close()
-            if result:
-                return json.loads(result[0])
-            return []
+            cfg = settings.get_config(guild_id)
+            role_ids = cfg.get("ticket_role_ids", [])
+            return [int(rid) if isinstance(rid, str) else rid for rid in role_ids]
         except Exception as e:
             logger.error(f"Fehler beim Abrufen der Ticket-Rollen: {e}")
             return []
@@ -270,133 +265,8 @@ class TicketSystem(ezcord.Cog, emoji="🎫"):
         
         return any(role.id in allowed_role_ids for role in member.roles)
 
-    @commands.slash_command(name="setup_ticket", description="Richtet das Ticket-System ein und erstellt die Kategorie")
-    @commands.has_permissions(administrator=True)
-    async def setup_ticket(self, ctx):
-        """
-        Erstellt eine Ticket-Kategorie und zeigt Rollen-Auswahl Dropdown.
-        Nur Admins können diesen Befehl ausführen.
-        """
-        try:
-            await ctx.defer()
-            
-            guild = ctx.guild
-            
-            # Erstelle Ticket-Kategorie
-            existing_category = discord.utils.get(guild.categories, name="🎫 Support Tickets")
-            if existing_category:
-                category = existing_category
-                logger.info(f"Ticket-Kategorie bereits vorhanden: {category.id}")
-            else:
-                category = await guild.create_category(name="🎫 Support Tickets")
-                logger.info(f"Ticket-Kategorie erstellt: {category.id}")
-            
-            # Erstelle Setup-Nachricht
-            embed = discord.Embed(
-                title="🎫 Ticket System Setup",
-                description="Wähle die Rollen aus, die Tickets bearbeiten können.",
-                color=discord.Color.blurple()
-            )
-            embed.add_field(
-                name="📋 Kategorie",
-                value=f"✅ Ticket-Kategorie erstellt: {category.mention}",
-                inline=False
-            )
-            embed.add_field(
-                name="💡 Nächster Schritt",
-                value="Wähle die Rollen die Tickets bearbeiten können (Supporter, Moderator, etc.)",
-                inline=False
-            )
-            
-            # Zeige Rollen-Auswahl
-            view = RoleSelectView(self.bot, guild)
-            await ctx.respond(embed=embed, view=view)
-            
-            logger.info(f"Ticket-System Setup für Guild {guild.id} gestartet")
-            
-        except Exception as e:
-            logger.error(f"Fehler beim Setup des Ticket-Systems: {e}")
-            await ctx.respond(f"❌ Fehler beim Setup: {e}", ephemeral=True)
-
-    @commands.slash_command(name="setup_ticket_message", description="Erstellt die Nachricht mit dem Create Ticket Button")
-    @commands.has_permissions(administrator=True)
-    async def setup_ticket_message(self, ctx):
-        """
-        Erstellt eine Nachricht mit dem Create Ticket Button.
-        Muss nach /setup_ticket ausgeführt werden.
-        """
-        try:
-            await ctx.defer()
-            
-            guild = ctx.guild
-            allowed_roles = self._get_allowed_roles(guild.id)
-            
-            if not allowed_roles:
-                await ctx.respond(
-                    "❌ Ticket-System noch nicht konfiguriert.\nFühre erst `/setup_ticket` aus!",
-                    ephemeral=True
-                )
-                return
-            
-            # Erstelle die Nachricht mit dem Button
-            embed = discord.Embed(
-                title="🎫 Support Ticket erstellen",
-                description="Klicke auf den Button unten, um ein neues Support-Ticket zu erstellen.",
-                color=discord.Color.blue()
-            )
-            embed.add_field(
-                name="Was ist ein Ticket?",
-                value="Ein privater Kanal nur für dich und dem Support-Team um dein Anliegen zu bearbeiten.",
-                inline=False
-            )
-            embed.add_field(
-                name="❓ Du brauchst Hilfe?",
-                value="Erstelle einfach ein Ticket und warte auf eine Antwort vom Support-Team!",
-                inline=False
-            )
-            
-            view = TicketView(self.bot)
-            await ctx.channel.send(embed=embed, view=view)
-            
-            await ctx.respond(
-                "✅ Ticket-Button wurde erstellt!",
-                ephemeral=True
-            )
-            logger.info(f"Ticket-Button für Guild {guild.id} erstellt")
-            
-        except Exception as e:
-            logger.error(f"Fehler beim Erstellen der Ticket-Nachricht: {e}")
-            await ctx.respond(f"❌ Fehler: {e}", ephemeral=True)
-            
-            # Erstelle die Nachricht mit dem Button
-            embed = discord.Embed(
-                title="🎫 Support Ticket erstellen",
-                description="Klicke auf den Button unten, um ein neues Support-Ticket zu erstellen.",
-                color=discord.Color.blue()
-            )
-            embed.add_field(
-                name="Was ist ein Ticket?",
-                value="Ein privater Kanal nur für dich und dem Support-Team um dein Anliegen zu bearbeiten.",
-                inline=False
-            )
-            embed.add_field(
-                name="❓ Du brauchst Hilfe?",
-                value="Erstelle einfach ein Ticket und warte auf eine Antwort vom Support-Team!",
-                inline=False
-            )
-            
-            view = TicketView(self.bot)
-            await ctx.channel.send(embed=embed, view=view)
-            
-            await ctx.respond(
-                "✅ Ticket-Button wurde erstellt!",
-                ephemeral=True
-            )
-            logger.info(f"Ticket-Button für Guild {guild.id} erstellt")
-            
-        except Exception as e:
-            logger.error(f"Fehler beim Erstellen der Ticket-Nachricht: {e}")
-            await ctx.respond(f"❌ Fehler: {e}", ephemeral=True)
+    # Hinweis: Setup-Befehle wurden entfernt und durch den zentralen `/setup`-Assistent ersetzt.
+    # Ticket-Button kann über den Setup-Assistenten gepostet werden.
 
     async def create_ticket(self, interaction: discord.Interaction):
         """
@@ -422,17 +292,36 @@ class TicketSystem(ezcord.Cog, emoji="🎫"):
                 else:
                     await self.remove_ticket(guild.id, member.id)
 
-            # Hole Ticket-Kategorie
-            category = discord.utils.get(guild.categories, name="🎫 Support Tickets")
+            # Hole Ticket-Kategorie oder erstelle sie
+            cfg = settings.get_config(guild.id)
+            category_id = cfg.get("ticket_category_id")
+            category = None
+            
+            if category_id:
+                category = guild.get_channel(int(category_id))
+            
             if not category:
-                await interaction.followup.send(
-                    "❌ Ticket-System nicht konfiguriert. Bitte Admin kontaktieren.",
-                    ephemeral=True
-                )
-                return
+                # Fallback: Suche "🎫 Support Tickets" oder erstelle sie
+                category = discord.utils.get(guild.categories, name="🎫 Support Tickets")
+                if not category:
+                    try:
+                        category = await guild.create_category("🎫 Support Tickets")
+                    except Exception as e:
+                        logger.error(f"Fehler beim Erstellen der Ticket-Kategorie: {e}")
+                        await interaction.followup.send(
+                            "❌ Konnte Ticket-Kategorie nicht erstellen. Bitte Admin kontaktieren.",
+                            ephemeral=True
+                        )
+                        return
 
             # Hole erlaubte Rollen
             allowed_role_ids = self._get_allowed_roles(guild.id)
+            if not allowed_role_ids:
+                await interaction.followup.send(
+                    "❌ Keine Ticket-Rollen konfiguriert. Bitte Admin kontaktieren.",
+                    ephemeral=True
+                )
+                return
             
             # Erstelle Channel mit Permissions
             overwrites = {
