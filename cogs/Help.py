@@ -61,6 +61,18 @@ class HelpDropdown(discord.ui.Select):
                 emoji="🔛"
             ),
             discord.SelectOption(
+                label="🗓️ Kalender",
+                value="calendar",
+                description="Events erstellen und verwalten",
+                emoji="🗓️"
+            ),
+            discord.SelectOption(
+                label="🛠️ Setup & Help",
+                value="setup_help",
+                description="Bot einrichten und Hilfe anzeigen",
+                emoji="🛠️"
+            ),
+            discord.SelectOption(
                 label="🔑 Owner Commands",
                 value="owner",
                 description="Nur für den Bot Owner",
@@ -87,6 +99,8 @@ class HelpDropdown(discord.ui.Select):
             "games": ["Memes", "RockPaperScissors"],
             "welcome": "Welcome",
             "join_to_create": "JoinToCreate",
+            "calendar": "ServerCalender",
+            "setup_help": ["Setup", "Help"],
             "owner": "OwnerCmds",
         }
         
@@ -171,6 +185,8 @@ class Help(ezcord.Cog, emoji="❓", description="Help Command - Alle Commands an
             "🎮 Spiele": ["Memes", "RockPaperScissors"],
             "👋 Welcome System": "Welcome",
             "🔛 Join to Create": "JoinToCreate",
+            "🗓️ Kalender": "ServerCalender",
+            "🛠️ Setup & Help": ["Setup", "Help"],
             "🔑 Owner Commands": "OwnerCmds",
         }
         
