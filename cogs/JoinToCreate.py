@@ -61,7 +61,7 @@ class JoinToCreate(ezcord.Cog, emoji="🔛", description="Join to Create - Autom
                 settings.add_j2c_category(after.channel.guild.id, temporary_category.id, temp_channel.id, temporary_category.name)
 
         if before.channel:
-            # Cleanup clone channels when empty
+            # Temporären Channel löschen, wenn leer (nur wenn Clone-Trigger genutzt wird)
             entry = None
             for e in settings.list_j2c_entries(before.channel.guild.id):
                 if str(e.get("channel_id")) == str(before.channel.id) and e.get("kind") == "clone":
@@ -71,7 +71,7 @@ class JoinToCreate(ezcord.Cog, emoji="🔛", description="Join to Create - Autom
                 await before.channel.delete(reason="J2C: leer")
                 settings.remove_j2c_entry(before.channel.id)
 
-            # Cleanup category bundles when voice becomes empty
+            # Kategorie löschen, wenn leer (nur wenn Kategorie-Trigger genutzt wird)
             cat_entry = None
             for e in settings.list_j2c_entries(before.channel.guild.id):
                 if e.get("kind") == "category" and str(e.get("voice_channel_id")) == str(before.channel.id):
@@ -90,7 +90,7 @@ class JoinToCreate(ezcord.Cog, emoji="🔛", description="Join to Create - Autom
                 settings.remove_j2c_entry(cat_entry.get("category_id"))
 
     def add_member_to_channel(self, channel_id, member_id):
-        # optional: track members separately if needed; currently managed by Discord state
+        # Diese Funktion wird in Zukunft genutzt werden, um Mitglieder zu Kanälen hinzuzufügen und zu verschieben, z.B. über Befehle oder externe Events (Stream Start aus Warteraum etc)
         return
 
     def remove_member_from_channel(self, channel_id, member_id):

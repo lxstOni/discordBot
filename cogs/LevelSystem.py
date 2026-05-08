@@ -27,6 +27,7 @@ class LevelSystem(ezcord.Cog, emoji="📶", description="Level System - Verdiene
 
     @commands.Cog.listener()
     async def on_ready(self):
+        # Hier muss noch Voice Time hinzugefügt werden damit man dafür auch XP bekommt, aktuell nur Message Count und XP für Messages
         async with aiosqlite.connect(self.DB) as db:
             await db.execute(
                 """
@@ -56,6 +57,7 @@ class LevelSystem(ezcord.Cog, emoji="📶", description="Level System - Verdiene
             role = await guild.create_role(name=role_name, color=discord.Color.blue())
         return role
 
+# Event-Listener für Nachrichten, um XP für NAchrichten zu vergeben und Level-Ups zu erkennen
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
@@ -85,6 +87,10 @@ class LevelSystem(ezcord.Cog, emoji="📶", description="Level System - Verdiene
             role = await self.ensure_role(message.guild, role_name)
             await message.author.add_roles(role)
             await message.channel.send(f"Level Up! Du hast die Rolle {role.mention} erhalten!", ephemeral=True)
+
+
+# Hier werden Eventlistene und mehr kommen um die Zeit zu messen die ein User in einem Voice Channel verbringt und aufgrund dessen XP vergeben
+# z.B XP pro Minute in Voice Channel, Bonus XP für bestimmte Kanäle, etc. Außerdem könnte man gestaffelt XP geben für mehr Zeit z.B nach 2 Stunden doppelt so viel XP
 
     @slash_command()
     async def rank(self, ctx):
