@@ -10,7 +10,6 @@ services:
       - ../logs:/app/logs
       - ../data:/app/data
       - ../source/db:/app/source/db
-
 # Docker recognizes the .env file if it is in the same directory. The discord bot network is a preference. If none is specified, Docker uses the default bridge network.
 #    env_file:
 #      - ../.env
